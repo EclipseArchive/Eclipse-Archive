@@ -114,7 +114,7 @@
                     const user = credentials.find(cred => cred[0] === enteredUsername && cred[1] === enteredPassword);
 
                     if (user) {
-                        document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
+                        document.getElementById("terminal").innerHTML += "\nAccess Granted.";
                         setTimeout(() => {
                             window.location.href = user[2];
                         }, 1000);
