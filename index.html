@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclipse Archive Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Source Code Pro', monospace;
+            padding: 20px;
+        }
+        .terminal {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            white-space: pre-line;
+        }
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal" id="terminal"></div>
+    <script>
+        let isEnteringPassword = false;
+        let isUsernameEntered = false;
+        let enteredUsername = "";
+        let enteredPassword = "";
+        
+        function displayStage(text, duration, callback, extraDelay = 0) {
+            const terminal = document.getElementById("terminal");
+            let count = 1;
+            let dots = setInterval(() => {
+                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text + ".".repeat(count));
+                count = count % 3 + 1;
+            }, 333.33);
+            setTimeout(() => {
+                clearInterval(dots);
+                terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE");
+                setTimeout(callback, extraDelay);
+            }, duration);
+        }
+        
+        function startSequence() {
+            document.getElementById("terminal").innerHTML = "SYSTEM BOOTING.";
+            displayStage("SYSTEM BOOTING", 2000, () => {
+                document.getElementById("terminal").innerHTML += "\nINITIALIZING.";
+                displayStage("INITIALIZING", 3000, () => {
+                    document.getElementById("terminal").innerHTML += "\nCHECKING INTEGRITY.";
+                    displayStage("CHECKING INTEGRITY", 1000, () => {
+                        setTimeout(() => {
+                            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</spa
