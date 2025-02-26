@@ -11,6 +11,7 @@
             color: white;
             font-family: 'Source Code Pro', monospace;
             padding: 20px;
+            margin: 0;
         }
         .terminal {
             position: absolute;
@@ -24,11 +25,16 @@
         @keyframes blink {
             50% { opacity: 0; }
         }
+        .disabled {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
     <div class="terminal" id="terminal"></div>
     <script>
+        let activeInput = null;
+
         function animateDots(text, duration, callback) {
             const terminal = document.getElementById("terminal");
             let count = 1;
@@ -79,43 +85,53 @@
 
         function startCommandPrompt() {
             document.getElementById("terminal").innerHTML = "";
-            displayCommandLine();
+            createCommandLine();
         }
 
-        function displayCommandLine() {
+        function createCommandLine() {
             const terminal = document.getElementById("terminal");
-            terminal.innerHTML += `X:\\Archive\\Users\\Guest> <span class="input-line"><span id="commandInput"></span><span class="blink">_</span></span>`;
+
+            // Disable previous input if it exists
+            if (activeInput) {
+                activeInput.classList.remove("blink");
+                activeInput.parentElement.classList.add("disabled");
+            }
+
+            // Create a new input line
+            let inputLine = document.createElement("div");
+            inputLine.innerHTML = `X:\\Archive\\Users\\Guest> <span id="commandInput"></span><span class="blink">_</span>`;
+            terminal.appendChild(inputLine);
+
+            activeInput = inputLine.querySelector("#commandInput");
+
             listenForCommand();
         }
 
         function listenForCommand() {
             let command = "";
-            const terminal = document.getElementById("terminal");
-            const inputLine = document.querySelector(".input-line");
             document.addEventListener("keydown", function handleInput(event) {
+                if (!activeInput) return;
+
                 if (event.key.length === 1) {
                     command += event.key;
                 } else if (event.key === "Backspace") {
                     command = command.slice(0, -1);
                 } else if (event.key === "Enter") {
                     document.removeEventListener("keydown", handleInput);
-                    inputLine.classList.remove("input-line"); // Disable previous input
-                    inputLine.querySelector(".blink").remove(); // Remove blinking cursor
                     processCommand(command.trim());
                     return;
                 }
-                document.getElementById("commandInput").textContent = command;
+                activeInput.textContent = command;
             });
         }
 
         function processCommand(command) {
             const terminal = document.getElementById("terminal");
-            terminal.innerHTML += "\n";
 
             if (command === "test") {
-                terminal.innerHTML += "Hello world\n";
+                terminal.innerHTML += "\nHello world\n";
             } else if (command === "list") {
-                terminal.innerHTML += "Documents: (Coming soon...)\n";
+                terminal.innerHTML += "\nDocuments: (Coming soon...)\n";
             } else if (command === "logout") {
                 animateDots("Logging out", 2000, () => {
                     terminal.innerHTML += "\nSuccessfully Logged Out.\n";
@@ -125,18 +141,17 @@
                 });
                 return;
             } else if (command === "help") {
-                terminal.innerHTML += "Available Commands:\n";
+                terminal.innerHTML += "\nAvailable Commands:\n";
                 terminal.innerHTML += " - test   → Prints 'Hello world'\n";
                 terminal.innerHTML += " - list   → Lists documents (coming soon)\n";
                 terminal.innerHTML += " - logout → Logs out and returns to login\n";
                 terminal.innerHTML += " - help   → Shows this help message\n";
             } else {
-                terminal.innerHTML += "Unknown command. Type 'help' for a list of commands.\n";
+                terminal.innerHTML += "\nUnknown command. Type 'help' for a list of commands.\n";
             }
 
-            // New input line
-            terminal.innerHTML += `\nX:\\Archive\\Users\\Guest> <span class="input-line"><span id="commandInput"></span><span class="blink">_</span></span>`;
-            listenForCommand();
+            // Create a new command input line
+            createCommandLine();
         }
 
         loadingScreen();
