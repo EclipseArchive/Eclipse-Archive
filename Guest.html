@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eclipse Archive</title>
+    <title>Eclipse Archive: Guest</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet">
     <style>
         body {
@@ -68,7 +68,17 @@
         function showProgressBar() {
             const terminal = document.getElementById("terminal");
             let progress = 0;
-            const steps = [13, 26, 39, 52, 65, 78, 91, 100];
+            const steps = [
+                { percent: 13, bar: "[####----------------]" },
+                { percent: 26, bar: "[########------------]" },
+                { percent: 39, bar: "[############--------]" },
+                { percent: 52, bar: "[################----]" },
+                { percent: 65, bar: "[##################--]" },
+                { percent: 78, bar: "[####################]" },
+                { percent: 91, bar: "[####################]" },
+                { percent: 100, bar: "[####################]" }
+            ];
+
             let interval = setInterval(() => {
                 if (progress >= steps.length) {
                     clearInterval(interval);
@@ -76,9 +86,8 @@
                     setTimeout(startCommandPrompt, 500);
                     return;
                 }
-                let percent = steps[progress];
-                let bar = "[" + "#".repeat(percent / 5) + "-".repeat(20 - percent / 5) + "] " + percent + "%";
-                terminal.innerHTML += bar + "\n";
+                let step = steps[progress];
+                terminal.innerHTML += `${step.bar} ${step.percent}%\n`;
                 progress++;
             }, 500);
         }
@@ -140,12 +149,15 @@
                     }, 500);
                 });
                 return;
+            } else if (command === "clear") {
+                terminal.innerHTML = "";
             } else if (command === "help") {
                 terminal.innerHTML += "\nAvailable Commands:\n";
-                terminal.innerHTML += " - test   → Prints 'Hello world'\n";
-                terminal.innerHTML += " - list   → Lists documents (coming soon)\n";
-                terminal.innerHTML += " - logout → Logs out and returns to login\n";
-                terminal.innerHTML += " - help   → Shows this help message\n";
+                terminal.innerHTML += " • test   - Prints 'Hello world'\n";
+                terminal.innerHTML += " • list   - Lists documents (coming soon)\n";
+                terminal.innerHTML += " • clear  - Clears the terminal screen\n";
+                terminal.innerHTML += " • logout - Logs out and returns to login\n";
+                terminal.innerHTML += " • help   - Shows this help message\n";
             } else {
                 terminal.innerHTML += "\nUnknown command. Type 'help' for a list of commands.\n";
             }
