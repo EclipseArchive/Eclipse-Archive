@@ -56,4 +56,86 @@
                     document.getElementById("terminal").innerHTML += "\nCHECKING INTEGRITY.";
                     displayStage("CHECKING INTEGRITY", 1000, () => {
                         setTimeout(() => {
-                            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</spa
+                            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</span>";
+                            captureUsername();
+                        }, 500);
+                    }, 500);
+                });
+            });
+        }
+        
+        function captureUsername() {
+            document.addEventListener("keydown", function(event) {
+                if (isEnteringPassword || isUsernameEntered) return;
+                
+                if (event.key.length === 1) {
+                    enteredUsername += event.key;
+                } else if (event.key === "Backspace") {
+                    enteredUsername = enteredUsername.slice(0, -1);
+                } else if (event.key === "Enter" && enteredUsername.trim() !== "") {
+                    isUsernameEntered = true;
+                    document.getElementById("cursor").remove();
+                    document.getElementById("terminal").innerHTML += "\nPassword: <span id='passwordDisplay'></span><span id='cursor' class='blink'>_</span>";
+                    isEnteringPassword = true;
+                    capturePassword();
+                    return;
+                }
+                document.getElementById("usernameDisplay").textContent = enteredUsername;
+            });
+        }
+        
+        function capturePassword() {
+            document.addEventListener("keydown", function(event) {
+                if (!isEnteringPassword) return;
+                
+                if (event.key.length === 1) {
+                    enteredPassword += event.key;
+                    document.getElementById("passwordDisplay").textContent += "*";
+                } else if (event.key === "Backspace") {
+                    enteredPassword = enteredPassword.slice(0, -1);
+                    document.getElementById("passwordDisplay").textContent = "*".repeat(enteredPassword.length);
+                } else if (event.key === "Enter" && enteredPassword.trim() !== "") {
+                    document.getElementById("cursor").remove();
+                    verifyCredentials();
+                    return;
+                }
+            });
+        }
+        
+        function verifyCredentials() {
+            fetch('Credentials.txt')
+                .then(response => response.text())
+                .then(data => {
+                    const credentials = data.split('\n').map(line => line.split(',').map(item => item.trim()));
+                    const user = credentials.find(cred => cred[0] === enteredUsername && cred[1] === enteredPassword);
+                    
+                    if (user) {
+                        document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
+                        setTimeout(() => {
+                            window.location.href = user[2];
+                        }, 1000);
+                    } else {
+                        document.getElementById("terminal").innerHTML += "\nPASSWORD INCORRECT";
+                        setTimeout(() => {
+                            resetToWelcomeScreen();
+                        }, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading credentials: ", error);
+                });
+        }
+        
+        function resetToWelcomeScreen() {
+            enteredUsername = "";
+            enteredPassword = "";
+            isUsernameEntered = false;
+            isEnteringPassword = false;
+            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</span>";
+            captureUsername();
+        }
+        
+        startSequence();
+    </script>
+</body>
+</html>
