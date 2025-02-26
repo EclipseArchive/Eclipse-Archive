@@ -1,120 +1,136 @@
-<script>
-    let isEnteringPassword = false;
-    let isUsernameEntered = false;
-    let enteredUsername = "";
-    let enteredPassword = "";
-    let passwordListener;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eclipse Archive Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: 'Source Code Pro', monospace;
+            padding: 20px;
+        }
+        .terminal {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            white-space: pre-line;
+        }
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal" id="terminal"></div>
+    <script>
+        let isEnteringPassword = false;
+        let isUsernameEntered = false;
+        let enteredUsername = "";
+        let enteredPassword = "";
 
-    function displayStage(text, duration, callback, extraDelay = 0) {
-        const terminal = document.getElementById("terminal");
-        let count = 1;
-        let dots = setInterval(() => {
-            terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text + ".".repeat(count));
-            count = count % 3 + 1;
-        }, 333.33);
-        setTimeout(() => {
-            clearInterval(dots);
-            terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE");
-            setTimeout(callback, extraDelay);
-        }, duration);
-    }
-
-    function startSequence() {
-        document.getElementById("terminal").innerHTML = "SYSTEM BOOTING.";
-        displayStage("SYSTEM BOOTING", 2000, () => {
-            document.getElementById("terminal").innerHTML += "\nINITIALIZING.";
-            displayStage("INITIALIZING", 3000, () => {
-                document.getElementById("terminal").innerHTML += "\nCHECKING INTEGRITY.";
-                displayStage("CHECKING INTEGRITY", 1000, () => {
-                    setTimeout(() => {
-                        document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</span>";
-                        captureUsername();
-                    }, 500);
-                }, 500);
-            });
-        });
-    }
-
-    function captureUsername() {
-        document.addEventListener("keydown", function usernameEventListener(event) {
-            if (isEnteringPassword || isUsernameEntered) return;
-
-            if (event.key.length === 1) {
-                enteredUsername += event.key;
-            } else if (event.key === "Backspace") {
-                enteredUsername = enteredUsername.slice(0, -1);
-            } else if (event.key === "Enter" && enteredUsername.trim() !== "") {
-                isUsernameEntered = true;
-                document.getElementById("cursor").remove();
-                document.getElementById("terminal").innerHTML += "\nPassword: <span id='passwordDisplay'></span><span id='cursor' class='blink'>_</span>";
-                isEnteringPassword = true;
-                capturePassword();
-
-                // Remove the username event listener after username is entered
-                document.removeEventListener("keydown", usernameEventListener);
-                return;
-            }
-            document.getElementById("usernameDisplay").textContent = enteredUsername;
-        });
-    }
-
-    function capturePassword() {
-        // Remove any existing listener before attaching the new one
-        if (passwordListener) {
-            document.removeEventListener("keydown", passwordListener);
+        function displayStage(text, duration, callback, extraDelay = 0) {
+            const terminal = document.getElementById("terminal");
+            let count = 1;
+            let dots = setInterval(() => {
+                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text + ".".repeat(count));
+                count = count % 3 + 1;
+            }, 333.33);
+            setTimeout(() => {
+                clearInterval(dots);
+                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text); // Remove dots
+                terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE"); // Replace the status with COMPLETE
+                setTimeout(callback, extraDelay);
+            }, duration);
         }
 
-        passwordListener = function (event) {
-            if (!isEnteringPassword) return;
-
-            if (event.key.length === 1) {
-                enteredPassword += event.key;
-                document.getElementById("passwordDisplay").textContent += "*";
-            } else if (event.key === "Backspace") {
-                enteredPassword = enteredPassword.slice(0, -1);
-                document.getElementById("passwordDisplay").textContent = "*".repeat(enteredPassword.length);
-            } else if (event.key === "Enter" && enteredPassword.trim() !== "") {
-                document.getElementById("cursor").remove();
-                verifyCredentials();
-                return;
-            }
-        };
-
-        document.addEventListener("keydown", passwordListener);
-    }
-
-    function verifyCredentials() {
-        fetch('Credentials.txt')
-            .then(response => response.text())
-            .then(data => {
-                const credentials = data.split('\n').map(line => line.split(',').map(item => item.trim()));
-                const user = credentials.find(cred => cred[0] === enteredUsername && cred[1] === enteredPassword);
-
-                if (user) {
-                    document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
-                    setTimeout(() => {
-                        window.location.href = user[2];
-                    }, 1000);
-                } else {
-                    document.getElementById("terminal").innerHTML += "\nPASSWORD INCORRECT";
-                    setTimeout(() => {
-                        resetToWelcomeScreen();
-                    }, 1000);
-                }
-            })
-            .catch(error => {
-                console.error("Error loading credentials: ", error);
+        function startSequence() {
+            document.getElementById("terminal").innerHTML = "SYSTEM BOOTING.";
+            displayStage("SYSTEM BOOTING", 2000, () => {
+                document.getElementById("terminal").innerHTML += "\nINITIALIZING.";
+                displayStage("INITIALIZING", 3000, () => {
+                    document.getElementById("terminal").innerHTML += "\nCHECKING INTEGRITY.";
+                    displayStage("CHECKING INTEGRITY", 1000, () => {
+                        setTimeout(() => {
+                            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</span>";
+                            captureUsername();
+                        }, 500);
+                    }, 500);
+                });
             });
-    }
+        }
 
-    function resetToWelcomeScreen() {
-        enteredUsername = "";
-        enteredPassword = "";
-        isUsernameEntered = false;
-        isEnteringPassword = false;
-        document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</span>";
-        captureUsername();
-    }
+        function captureUsername() {
+            document.addEventListener("keydown", function usernameEventListener(event) {
+                if (isEnteringPassword || isUsernameEntered) return;
 
-    startSequence();
-</script>
+                if (event.key.length === 1) {
+                    enteredUsername += event.key;
+                } else if (event.key === "Backspace") {
+                    enteredUsername = enteredUsername.slice(0, -1);
+                } else if (event.key === "Enter" && enteredUsername.trim() !== "") {
+                    isUsernameEntered = true;
+                    document.getElementById("cursor").remove();
+                    document.getElementById("terminal").innerHTML += "\nPassword: <span id='passwordDisplay'></span><span id='cursor' class='blink'>_</span>";
+                    isEnteringPassword = true;
+                    capturePassword();
+
+                    // Remove the username event listener after username is entered
+                    document.removeEventListener("keydown", usernameEventListener);
+                    return;
+                }
+                document.getElementById("usernameDisplay").textContent = enteredUsername;
+            });
+        }
+
+        function capturePassword() {
+            document.addEventListener("keydown", function passwordEventListener(event) {
+                if (!isEnteringPassword) return;
+
+                if (event.key.length === 1) {
+                    enteredPassword += event.key;
+                    document.getElementById("passwordDisplay").textContent += "*";
+                } else if (event.key === "Backspace") {
+                    enteredPassword = enteredPassword.slice(0, -1);
+                    document.getElementById("passwordDisplay").textContent = "*".repeat(enteredPassword.length);
+                } else if (event.key === "Enter" && enteredPassword.trim() !== "") {
+                    document.getElementById("cursor").remove();
+                    verifyCredentials();
+                    return;
+                }
+            });
+        }
+
+        function verifyCredentials() {
+            fetch('Credentials.txt')
+                .then(response => response.text())
+                .then(data => {
+                    const credentials = data.split('\n').map(line => line.split(',').map(item => item.trim()));
+                    const user = credentials.find(cred => cred[0] === enteredUsername && cred[1] === enteredPassword);
+
+                    if (user) {
+                        document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
+                        setTimeout(() => {
+                            window.location.href = user[2];
+                        }, 1000);
+                    } else {
+                        document.getElementById("terminal").innerHTML += "\nPASSWORD INCORRECT, TERMINATING SESSION";
+                        setTimeout(() => {
+                            window.location.reload(); // Refresh the page when password is incorrect
+                        }, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading credentials: ", error);
+                });
+        }
+
+        startSequence();
+    </script>
+</body>
+</html>
