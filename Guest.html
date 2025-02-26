@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eclipse Archive: Guest</title>
+    <title>Eclipse Archive</title>
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet">
     <style>
         body {
@@ -84,13 +84,14 @@
 
         function displayCommandLine() {
             const terminal = document.getElementById("terminal");
-            terminal.innerHTML += "X:\\Archive\\Users\\Guest> <span id='commandInput'></span><span class='blink'>_</span>";
+            terminal.innerHTML += `X:\\Archive\\Users\\Guest> <span class="input-line"><span id="commandInput"></span><span class="blink">_</span></span>`;
             listenForCommand();
         }
 
         function listenForCommand() {
             let command = "";
             const terminal = document.getElementById("terminal");
+            const inputLine = document.querySelector(".input-line");
             document.addEventListener("keydown", function handleInput(event) {
                 if (event.key.length === 1) {
                     command += event.key;
@@ -98,6 +99,8 @@
                     command = command.slice(0, -1);
                 } else if (event.key === "Enter") {
                     document.removeEventListener("keydown", handleInput);
+                    inputLine.classList.remove("input-line"); // Disable previous input
+                    inputLine.querySelector(".blink").remove(); // Remove blinking cursor
                     processCommand(command.trim());
                     return;
                 }
@@ -123,15 +126,16 @@
                 return;
             } else if (command === "help") {
                 terminal.innerHTML += "Available Commands:\n";
-                terminal.innerHTML += " • test   - Prints 'Hello world'\n";
-                terminal.innerHTML += " • list   - Lists documents (coming soon)\n";
-                terminal.innerHTML += " • logout - Logs out and returns to login\n";
-                terminal.innerHTML += " • help   - Shows this help message\n";
+                terminal.innerHTML += " - test   → Prints 'Hello world'\n";
+                terminal.innerHTML += " - list   → Lists documents (coming soon)\n";
+                terminal.innerHTML += " - logout → Logs out and returns to login\n";
+                terminal.innerHTML += " - help   → Shows this help message\n";
             } else {
                 terminal.innerHTML += "Unknown command. Type 'help' for a list of commands.\n";
             }
 
-            terminal.innerHTML += "\nX:\\Archive\\Users\\Guest> <span id='commandInput'></span><span class='blink'>_</span>";
+            // New input line
+            terminal.innerHTML += `\nX:\\Archive\\Users\\Guest> <span class="input-line"><span id="commandInput"></span><span class="blink">_</span></span>`;
             listenForCommand();
         }
 
