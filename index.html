@@ -116,9 +116,9 @@
                     if (user) {
                         document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
                         setTimeout(() => {
-                            // Redirect to the file page in the format https://eclipse-archive.pages.dev/FILENAME
+                            // Redirect to the file page in the format https://eclipse-archive.pages.dev/files/FILENAME.txt
                             const filePath = user[2];  // assuming user[2] contains the filename
-                            window.location.href = `https://eclipse-archive.pages.dev/${filePath}`;
+                            window.location.href = `https://eclipse-archive.pages.dev/files/${filePath}`;
                         }, 1000);
                     } else {
                         document.getElementById("terminal").innerHTML += "\nPASSWORD INCORRECT, TERMINATING SESSION";
