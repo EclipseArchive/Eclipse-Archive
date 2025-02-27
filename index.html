@@ -30,8 +30,8 @@
     <div class="terminal" id="terminal"></div>
     <script>
         let isEnteringPassword = false;
-        let isUsernameEntered = false;
-        let enteredUsername = "";
+        let isFilenameEntered = false;
+        let enteredFilename = "";
         let enteredPassword = "";
 
         function displayStage(text, duration, callback, extraDelay = 0) {
@@ -43,8 +43,8 @@
             }, 333.33);
             setTimeout(() => {
                 clearInterval(dots);
-                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text); // Remove dots
-                terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE"); // Replace the status with COMPLETE
+                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text);
+                terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE");
                 setTimeout(callback, extraDelay);
             }, duration);
         }
@@ -57,34 +57,33 @@
                     document.getElementById("terminal").innerHTML += "\nCHECKING INTEGRITY.";
                     displayStage("CHECKING INTEGRITY", 1000, () => {
                         setTimeout(() => {
-                            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nUsername: <span id='usernameDisplay'></span><span id='cursor' class='blink'>_</span>";
-                            captureUsername();
+                            document.getElementById("terminal").innerHTML = "WELCOME TO THE ARCHIVE\n--------------------------------------\n\nFilename: <span id='filenameDisplay'></span><span id='cursor' class='blink'>_</span>";
+                            captureFilename();
                         }, 500);
                     }, 500);
                 });
             });
         }
 
-        function captureUsername() {
-            document.addEventListener("keydown", function usernameEventListener(event) {
-                if (isEnteringPassword || isUsernameEntered) return;
+        function captureFilename() {
+            document.addEventListener("keydown", function filenameEventListener(event) {
+                if (isEnteringPassword || isFilenameEntered) return;
 
                 if (event.key.length === 1) {
-                    enteredUsername += event.key;
+                    enteredFilename += event.key;
                 } else if (event.key === "Backspace") {
-                    enteredUsername = enteredUsername.slice(0, -1);
-                } else if (event.key === "Enter" && enteredUsername.trim() !== "") {
-                    isUsernameEntered = true;
+                    enteredFilename = enteredFilename.slice(0, -1);
+                } else if (event.key === "Enter" && enteredFilename.trim() !== "") {
+                    isFilenameEntered = true;
                     document.getElementById("cursor").remove();
                     document.getElementById("terminal").innerHTML += "\nPassword: <span id='passwordDisplay'></span><span id='cursor' class='blink'>_</span>";
                     isEnteringPassword = true;
                     capturePassword();
 
-                    // Remove the username event listener after username is entered
-                    document.removeEventListener("keydown", usernameEventListener);
+                    document.removeEventListener("keydown", filenameEventListener);
                     return;
                 }
-                document.getElementById("usernameDisplay").textContent = enteredUsername;
+                document.getElementById("filenameDisplay").textContent = enteredFilename;
             });
         }
 
@@ -111,17 +110,26 @@
                 .then(response => response.text())
                 .then(data => {
                     const credentials = data.split('\n').map(line => line.split(',').map(item => item.trim()));
-                    const user = credentials.find(cred => cred[0] === enteredUsername && cred[1] === enteredPassword);
+                    const user = credentials.find(cred => cred[0] === enteredFilename && cred[1] === enteredPassword);
 
                     if (user) {
                         document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
                         setTimeout(() => {
-                            window.location.href = user[2];
+                            const filePath = `files/${user[2]}`;
+                            fetch(filePath)
+                                .then(response => response.text())
+                                .then(fileData => {
+                                    document.getElementById("terminal").innerHTML = fileData;
+                                })
+                                .catch(error => {
+                                    console.error("Error loading file: ", error);
+                                    document.getElementById("terminal").innerHTML += "\nFailed to load file.";
+                                });
                         }, 1000);
                     } else {
                         document.getElementById("terminal").innerHTML += "\nPASSWORD INCORRECT, TERMINATING SESSION";
                         setTimeout(() => {
-                            window.location.reload(); // Refresh the page when password is incorrect
+                            window.location.reload();
                         }, 1000);
                     }
                 })
