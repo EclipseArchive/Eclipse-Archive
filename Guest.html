@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -34,85 +34,84 @@
     <div class="terminal" id="terminal"></div>
     <script>
         let activeInput = null;
-
-        function animateDots(text, duration, callback) {
-            const terminal = document.getElementById("terminal");
-            let count = 1;
-            let dots = setInterval(() => {
-                terminal.innerHTML = text + ".".repeat(count);
-                count = count % 3 + 1;
-            }, 333);
-            setTimeout(() => {
-                clearInterval(dots);
-                callback();
-            }, duration);
+        let currentUser = "Guest";
+        
+        async function fetchFile(filename) {
+            try {
+                const response = await fetch(`files/${filename}`);
+                if (!response.ok) throw new Error("File not found");
+                return await response.text();
+            } catch (error) {
+                return null;
+            }
         }
 
-        function loadingScreen() {
+        async function listDocuments() {
             const terminal = document.getElementById("terminal");
-            animateDots("LOADING USER ENVIRONMENT", 2000, () => {
-                terminal.innerHTML = "LOADING USER ENVIRONMENT... \n--------------------------------------\n";
-                setTimeout(() => {
-                    terminal.innerHTML += "- Setting up secure session\n";
-                    setTimeout(() => {
-                        terminal.innerHTML += "- Loading user preferences\n";
-                        setTimeout(() => {
-                            terminal.innerHTML += "- Checking system updates\n\n";
-                            showProgressBar();
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
-            });
-        }
-
-        function showProgressBar() {
-            const terminal = document.getElementById("terminal");
-            let progress = 0;
-            const steps = [
-                { percent: 13, bar: "[##------------------]" },
-                { percent: 26, bar: "[#####---------------]" },
-                { percent: 39, bar: "[#######-------------]" },
-                { percent: 52, bar: "[##########----------]" },
-                { percent: 65, bar: "[#############-------]" },
-                { percent: 78, bar: "[################----]" },
-                { percent: 91, bar: "[##################--]" },
-                { percent: 100, bar: "[####################]" }
-            ];
-
-            let interval = setInterval(() => {
-                if (progress >= steps.length) {
-                    clearInterval(interval);
-                    terminal.innerHTML += "\nSystem Ready.\n";
-                    setTimeout(startCommandPrompt, 500);
-                    return;
+            terminal.innerHTML += "Listing Documents...\n----------------[Main]----------------\n";
+            
+            const filenames = ["Origin.txt", "Relations.txt"]; // Replace with dynamic fetching
+            for (const filename of filenames) {
+                const content = await fetchFile(filename);
+                if (content) {
+                    let firstLine = content.split("\n")[0];
+                    if (firstLine.includes(currentUser)) {
+                        terminal.innerHTML += `${filename}   [Open]\n`;
+                    }
                 }
-                let step = steps[progress];
-                terminal.innerHTML += `${step.bar} ${step.percent}%\n`;
-                progress++;
-            }, 500);
+            }
+            terminal.innerHTML += "--------------------------------------\n";
         }
 
-        function startCommandPrompt() {
-            document.getElementById("terminal").innerHTML = "";
-            createCommandLine();
+        async function openDocument(filename) {
+            const terminal = document.getElementById("terminal");
+            const content = await fetchFile(filename);
+            
+            if (!content) {
+                terminal.innerHTML += `Error: File '${filename}' not found.\n`;
+                return;
+            }
+            
+            let lines = content.split("\n");
+            if (!lines[0].includes(currentUser)) {
+                terminal.innerHTML += `Access Denied: '${filename}'\n`;
+                return;
+            }
+            
+            terminal.innerHTML = `X:\\Archive\\Users\\${currentUser}> open ${filename}\nOpening...\n\n`;
+            setTimeout(() => {
+                terminal.innerHTML += lines.slice(1).join("\n") + "\n\nType 'back' to go back.\n";
+                waitForBackCommand();
+            }, 1500);
+        }
+
+        function waitForBackCommand() {
+            let command = "";
+            document.addEventListener("keydown", function handleBack(event) {
+                if (event.key.length === 1) {
+                    command += event.key;
+                } else if (event.key === "Backspace") {
+                    command = command.slice(0, -1);
+                } else if (event.key === "Enter") {
+                    if (command.trim() === "back") {
+                        document.removeEventListener("keydown", handleBack);
+                        terminal.innerHTML = "";
+                        listDocuments();
+                    }
+                }
+            });
         }
 
         function createCommandLine() {
             const terminal = document.getElementById("terminal");
-
-            // Disable previous input if it exists
             if (activeInput) {
                 activeInput.classList.remove("blink");
                 activeInput.parentElement.classList.add("disabled");
             }
-
-            // Create a new input line
             let inputLine = document.createElement("div");
-            inputLine.innerHTML = `X:\\Archive\\Users\\Guest> <span id="commandInput"></span><span class="blink">_</span>`;
+            inputLine.innerHTML = `X:\\Archive\\Users\\${currentUser}> <span id="commandInput"></span><span class="blink">_</span>`;
             terminal.appendChild(inputLine);
-
             activeInput = inputLine.querySelector("#commandInput");
-
             listenForCommand();
         }
 
@@ -120,7 +119,6 @@
             let command = "";
             document.addEventListener("keydown", function handleInput(event) {
                 if (!activeInput) return;
-
                 if (event.key.length === 1) {
                     command += event.key;
                 } else if (event.key === "Backspace") {
@@ -136,37 +134,26 @@
 
         function processCommand(command) {
             const terminal = document.getElementById("terminal");
-
-            if (command === "test") {
-                terminal.innerHTML += "\nHello world\n";
-            } else if (command === "list") {
-                terminal.innerHTML += "\nDocuments: (Coming soon...)\n";
-            } else if (command === "logout") {
-                animateDots("Logging out", 2000, () => {
-                    terminal.innerHTML += "\nSuccessfully Logged Out.\n";
-                    setTimeout(() => {
-                        window.location.href = "index.html";
-                    }, 500);
-                });
-                return;
+            terminal.innerHTML += "\n";
+            
+            if (command === "list") {
+                listDocuments();
+            } else if (command.startsWith("open ")) {
+                openDocument(command.split(" ")[1]);
             } else if (command === "clear") {
                 terminal.innerHTML = "";
+            } else if (command === "logout") {
+                terminal.innerHTML += "Logging out...\n";
+                setTimeout(() => window.location.href = "index.html", 1500);
             } else if (command === "help") {
-                terminal.innerHTML += "\nAvailable Commands:\n";
-                terminal.innerHTML += " • test   - Prints 'Hello world'\n";
-                terminal.innerHTML += " • list   - Lists documents (coming soon)\n";
-                terminal.innerHTML += " • clear  - Clears the terminal screen\n";
-                terminal.innerHTML += " • logout - Logs out and returns to login\n";
-                terminal.innerHTML += " • help   - Shows this help message\n";
+                terminal.innerHTML += "Available Commands:\n - list\n - open [filename]\n - clear\n - logout\n - help\n";
             } else {
-                terminal.innerHTML += "\nUnknown command. Type 'help' for a list of commands.\n";
+                terminal.innerHTML += "Unknown command. Type 'help' for a list of commands.\n";
             }
-
-            // Create a new command input line
             createCommandLine();
         }
 
-        loadingScreen();
+        listDocuments();
     </script>
 </body>
 </html>
