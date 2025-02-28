@@ -43,8 +43,8 @@
             }, 333.33);
             setTimeout(() => {
                 clearInterval(dots);
-                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text); // Remove dots
-                terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE"); // Replace the status with COMPLETE
+                terminal.innerHTML = terminal.innerHTML.replace(text + ".".repeat(count - 1), text);
+                terminal.innerHTML = terminal.innerHTML.replace(text, "COMPLETE");
                 setTimeout(callback, extraDelay);
             }, duration);
         }
@@ -80,7 +80,6 @@
                     isEnteringPassword = true;
                     capturePassword();
 
-                    // Remove the filename event listener after filename is entered
                     document.removeEventListener("keydown", filenameEventListener);
                     return;
                 }
@@ -116,14 +115,13 @@
                     if (user) {
                         document.getElementById("terminal").innerHTML += "\nVerifying credentials..\nAccess Granted.";
                         setTimeout(() => {
-                            // Redirect to the Google Docs link in the format https://docs.google.com/document/d/your-doc-id
-                            const googleDocLink = user[2];  // assuming user[2] contains the Google Docs URL
+                            const googleDocLink = user[2];
                             window.location.href = googleDocLink;
                         }, 1000);
                     } else {
-                        document.getElementById("terminal").innerHTML += "\nPASSWORD INCORRECT, TERMINATING SESSION";
+                        document.getElementById("terminal").innerHTML += "\nFILENAME OR PASSWORD INCORRECT, TERMINATING SESSION";
                         setTimeout(() => {
-                            window.location.reload(); // Refresh the page when password is incorrect
+                            window.location.reload();
                         }, 1000);
                     }
                 })
@@ -136,3 +134,4 @@
     </script>
 </body>
 </html>
+//if someone ever reads this know that i want to die
